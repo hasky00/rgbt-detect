@@ -20,6 +20,19 @@ The stock model is clearly weaker on thermal. After the balanced fine-tune
 both sides improve and the gap closes. This is a small, short run: expect
 higher numbers from the full dataset and 50 epochs on a GPU.
 
+## Full run (in progress)
+
+Started 21 Nov 2026 on a Colab T4: the full M3FD set (3,780 training scenes, 420 validation scenes, each as one colour and one thermal image), 50 epochs.
+
+Stock YOLOv8n (COCO) on the full validation set, before training:
+
+| camera | mAP50 | mAP50-95 | person | vehicle |
+|---|---|---|---|---|
+| colour | 0.600 | 0.368 | 0.508 | 0.692 |
+| thermal | 0.503 | 0.284 | 0.492 | 0.514 |
+
+Gap between cameras before training: 0.097. After the first epoch the shared model scored 0.649 mAP50 on the mixed validation set. Final numbers will replace this section when the run ends.
+
 ## Run it on Colab
 
 Open [train_colab.ipynb](https://colab.research.google.com/github/hasky00/rgbt-detect/blob/main/train_colab.ipynb), set the runtime to T4 GPU, and choose Run all. It downloads the full dataset, trains for 50 epochs and scores both camera types.
