@@ -9,6 +9,7 @@ We write two JPEGs per scene with the same boxes, so the dataset is an exact
 """
 import argparse
 import sys
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -72,19 +73,34 @@ def main():
             if (IMAGES / split / f"{stem}_thermal.jpg").exists():
                 return None
             kw = dict(repo_id=HF_REPO, repo_type="dataset", local_dir=str(RAW))
-            tiff = hf_hub_download(filename=f"{split}/images/{stem}.tiff", **kw)
-            lab = hf_hub_download(filename=f"{split}/labels/{stem}.txt", **kw)
+            # The Hub rate-limits anonymous downloads (HTTP 429). Wait and try
+            # again instead of letting one refused file stop the whole run.
+            for attempt in range(8):
+                try:
+                    tiff = hf_hub_download(filename=f"{split}/images/{stem}.tiff", **kw)
+                    lab = hf_hub_download(filename=f"{split}/labels/{stem}.txt", **kw)
+                    break
+                except Exception as e:  # noqa: BLE001
+                    if attempt == 7:
+                        return f"FAILED {stem}: {e}"
+                    time.sleep(min(60, 5 * 2 ** attempt))
             msg = convert(split, stem, tiff, lab)
             if not args.keep_raw:
                 Path(tiff).unlink(missing_ok=True)
             return msg
 
+        failed = 0
         with ThreadPoolExecutor(8) as pool:
             for i, msg in enumerate(pool.map(one, stems), 1):
                 if msg:
                     print(msg)
+                    failed += msg.startswith("FAILED")
                 if i % 50 == 0:
                     print(f"  {i}/{len(stems)}")
+        got = len(list((IMAGES / split).glob("*_rgb.jpg")))
+        print(f"{split}: {got} of {len(stems)} scenes on disk, {failed} failed")
+        if failed:
+            sys.exit("some files failed to download: run this script again, it skips what is already there")
     print("done")
 
 
