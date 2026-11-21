@@ -20,7 +20,11 @@ The stock model is clearly weaker on thermal. After the balanced fine-tune
 both sides improve and the gap closes. This is a small, short run: expect
 higher numbers from the full dataset and 50 epochs on a GPU.
 
-## Run it
+## Run it on Colab
+
+Open [train_colab.ipynb](https://colab.research.google.com/github/hasky00/rgbt-detect/blob/main/train_colab.ipynb), set the runtime to T4 GPU, and choose Run all. It downloads the full dataset, trains for 50 epochs and scores both camera types.
+
+## Run it locally
 
 ```bash
 pip install -r requirements.txt
